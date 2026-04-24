@@ -5,9 +5,11 @@ const clickerButton = document.getElementById("clickerButton");
 const bucketImage = document.getElementById("bucketImage");
 const mintUpgrade = document.getElementById("mintUpgrade");
 const blueishUpgrade = document.getElementById("blueishUpgrade");
+const chocolateBarUpgrade = document.getElementById("chocolateBarUpgrade");
 const candyDudeUpgrade = document.getElementById("candyDudeUpgrade");
 const mintPrice = document.getElementById("mintPrice");
 const blueishPrice = document.getElementById("blueishPrice");
+const chocolateBarPrice = document.getElementById("chocolateBarPrice");
 const candyDudePrice = document.getElementById("candyDudePrice");
 const minerCave = document.getElementById("minerCave");
 const minerStatus = document.getElementById("minerStatus");
@@ -22,12 +24,14 @@ const superShopSection = document.getElementById("superShopSection");
 const antiCheat = window.CandyAntiCheat;
 const moneyAntiCheat = window.CandyMoneyAntiCheat;
 const LOCAL_PLAYERDATA_KEY = "candyClickerLocalPlayerdata";
+const PLAYERDATA_SCHEMA_VERSION = 2;
 
 let totalClicks = 0;
 let clicksPerTap = 1;
 let clicksPerSecond = 0;
 let mintCost = 25;
 let blueishCost = 45;
+let chocolateBarCost = 100;
 let candyDudeOwned = false;
 let audioContext;
 let clickHue = 0;
@@ -66,6 +70,7 @@ antiCheat.setResetHandler(() => {
   clicksPerSecond = 0;
   mintCost = 25;
   blueishCost = 45;
+  chocolateBarCost = 100;
   candyDudeOwned = false;
 });
 
@@ -85,45 +90,61 @@ function loadLocalPlayerdata() {
   }
 
   try {
-    const saved = JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    const saved =
+      parsed && typeof parsed === "object" && "version" in parsed
+        ? parsed
+        : {
+            version: 1,
+            playerdata: parsed
+          };
+    const playerdata = saved.playerdata || {};
 
-    if (typeof saved.totalClicks === "number" && Number.isFinite(saved.totalClicks) && saved.totalClicks >= 0) {
-      totalClicks = saved.totalClicks;
+    if (typeof playerdata.totalClicks === "number" && Number.isFinite(playerdata.totalClicks) && playerdata.totalClicks >= 0) {
+      totalClicks = playerdata.totalClicks;
     }
 
-    if (typeof saved.clicksPerTap === "number" && Number.isFinite(saved.clicksPerTap) && saved.clicksPerTap >= 1) {
-      clicksPerTap = saved.clicksPerTap;
+    if (typeof playerdata.clicksPerTap === "number" && Number.isFinite(playerdata.clicksPerTap) && playerdata.clicksPerTap >= 1) {
+      clicksPerTap = playerdata.clicksPerTap;
     }
 
-    if (typeof saved.clicksPerSecond === "number" && Number.isFinite(saved.clicksPerSecond) && saved.clicksPerSecond >= 0) {
-      clicksPerSecond = saved.clicksPerSecond;
+    if (typeof playerdata.clicksPerSecond === "number" && Number.isFinite(playerdata.clicksPerSecond) && playerdata.clicksPerSecond >= 0) {
+      clicksPerSecond = playerdata.clicksPerSecond;
     }
 
-    if (typeof saved.mintCost === "number" && Number.isFinite(saved.mintCost) && saved.mintCost >= 1) {
-      mintCost = saved.mintCost;
+    if (typeof playerdata.mintCost === "number" && Number.isFinite(playerdata.mintCost) && playerdata.mintCost >= 1) {
+      mintCost = playerdata.mintCost;
     }
 
-    if (typeof saved.blueishCost === "number" && Number.isFinite(saved.blueishCost) && saved.blueishCost >= 1) {
-      blueishCost = saved.blueishCost;
+    if (typeof playerdata.blueishCost === "number" && Number.isFinite(playerdata.blueishCost) && playerdata.blueishCost >= 1) {
+      blueishCost = playerdata.blueishCost;
     }
 
-    candyDudeOwned = Boolean(saved.candyDudeOwned);
+    if (typeof playerdata.chocolateBarCost === "number" && Number.isFinite(playerdata.chocolateBarCost) && playerdata.chocolateBarCost >= 1) {
+      chocolateBarCost = playerdata.chocolateBarCost;
+    }
+
+    candyDudeOwned = Boolean(playerdata.candyDudeOwned);
   } catch {
     window.localStorage.removeItem(LOCAL_PLAYERDATA_KEY);
   }
 }
 
 function saveLocalPlayerdata() {
-  const playerdata = {
-    totalClicks,
-    clicksPerTap,
-    clicksPerSecond,
-    mintCost,
-    blueishCost,
-    candyDudeOwned
+  const saveRecord = {
+    version: PLAYERDATA_SCHEMA_VERSION,
+    playerdata: {
+      totalClicks,
+      clicksPerTap,
+      clicksPerSecond,
+      mintCost,
+      blueishCost,
+      chocolateBarCost,
+      candyDudeOwned
+    }
   };
 
-  window.localStorage.setItem(LOCAL_PLAYERDATA_KEY, JSON.stringify(playerdata));
+  window.localStorage.setItem(LOCAL_PLAYERDATA_KEY, JSON.stringify(saveRecord));
 }
 
 function updateUi() {
@@ -133,6 +154,7 @@ function updateUi() {
     clicksPerSecond,
     mintCost,
     blueishCost,
+    chocolateBarCost,
     candyDudeOwned
   };
 
@@ -144,10 +166,12 @@ function updateUi() {
   perSecond.textContent = `+${formatNumber(clicksPerSecond)} per second`;
   mintPrice.textContent = `${formatNumber(mintCost)} clicks`;
   blueishPrice.textContent = `${formatNumber(blueishCost)} clicks`;
+  chocolateBarPrice.textContent = `${formatNumber(chocolateBarCost)} clicks`;
   candyDudePrice.textContent = candyDudeOwned ? "Owned" : "1000 clicks";
 
   mintUpgrade.disabled = totalClicks < mintCost;
   blueishUpgrade.disabled = totalClicks < blueishCost;
+  chocolateBarUpgrade.disabled = totalClicks < chocolateBarCost;
   candyDudeUpgrade.disabled = candyDudeOwned || totalClicks < 1000;
   candyDudeUpgrade.classList.toggle("is-sold", candyDudeOwned);
   saveLocalPlayerdata();
@@ -455,6 +479,23 @@ blueishUpgrade.addEventListener("click", () => {
   buyUpgrade(blueishUpgrade, blueishCost, () => {
     clicksPerSecond += 1;
     blueishCost = Math.round(blueishCost * 1.75);
+  });
+});
+
+chocolateBarUpgrade.addEventListener("click", () => {
+  if (antiCheat.isLocked()) {
+    return;
+  }
+
+  antiCheat.allowChange({
+    maxSpend: chocolateBarCost,
+    maxTapGain: 3,
+    allowCostChange: true
+  });
+
+  buyUpgrade(chocolateBarUpgrade, chocolateBarCost, () => {
+    clicksPerTap += 3;
+    chocolateBarCost = Math.round(chocolateBarCost * 1.75);
   });
 });
 

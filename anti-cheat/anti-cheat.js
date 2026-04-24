@@ -180,6 +180,7 @@
       clicksPerSecond: sanitizeNumber(snapshot.clicksPerSecond),
       mintCost: sanitizeNumber(snapshot.mintCost),
       blueishCost: sanitizeNumber(snapshot.blueishCost),
+      chocolateBarCost: sanitizeNumber(snapshot.chocolateBarCost),
       candyDudeOwned: Boolean(snapshot.candyDudeOwned)
     };
 
@@ -193,7 +194,8 @@
       clean.clicksPerTap < 1 ||
       clean.clicksPerSecond < 0 ||
       clean.mintCost < 1 ||
-      clean.blueishCost < 1
+      clean.blueishCost < 1 ||
+      clean.chocolateBarCost < 1
     ) {
       trigger("invalid-state-range");
     }
@@ -207,6 +209,7 @@
       const secondGain = clean.clicksPerSecond - previous.clicksPerSecond;
       const mintCostDelta = clean.mintCost - previous.mintCost;
       const blueishCostDelta = clean.blueishCost - previous.blueishCost;
+      const chocolateBarCostDelta = clean.chocolateBarCost - previous.chocolateBarCost;
 
       if (clickGain > allowance.maxGain + 0.001) {
         trigger("too-many-clicks");
@@ -220,7 +223,7 @@
         trigger("illegal-upgrade-gain");
       }
 
-      if (!allowance.allowCostChange && (mintCostDelta !== 0 || blueishCostDelta !== 0)) {
+      if (!allowance.allowCostChange && (mintCostDelta !== 0 || blueishCostDelta !== 0 || chocolateBarCostDelta !== 0)) {
         trigger("illegal-cost-change");
       }
 
@@ -234,6 +237,7 @@
         clean.clicksPerSecond !== previous.clicksPerSecond ||
         clean.mintCost !== previous.mintCost ||
         clean.blueishCost !== previous.blueishCost ||
+        clean.chocolateBarCost !== previous.chocolateBarCost ||
         clean.candyDudeOwned !== previous.candyDudeOwned;
 
       if (changed) {

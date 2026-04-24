@@ -235,18 +235,24 @@ body {
   border-top: 4px solid rgba(89, 55, 34, 0.6);
 }
 
-.miner-cave-frame img {
+.miner-sprite-mover {
   position: absolute;
-  left: 50%;
+  left: 0;
   bottom: 6%;
   z-index: 2;
   width: 3rem;
   height: auto;
-  transform: translateX(-50%);
+  transform-origin: center bottom;
+}
+
+.miner-cave-frame img {
+  display: block;
+  width: 100%;
+  height: auto;
   filter: drop-shadow(0 0.6rem 0 rgba(26, 19, 18, 0.16));
 }
 
-.miner-cave-frame.is-hit img {
+.miner-cave-frame.is-hit .miner-sprite-mover {
   animation: minerLand 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
@@ -412,15 +418,15 @@ body {
 
 @keyframes minerLand {
   0% {
-    transform: translateX(-50%) translateY(-0.2rem) scale(0.9);
+    transform: translateY(-0.2rem) scale(0.9);
   }
 
   45% {
-    transform: translateX(-50%) translateY(0.6rem) scale(1.12);
+    transform: translateY(0.6rem) scale(1.12);
   }
 
   100% {
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 

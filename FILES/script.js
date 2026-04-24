@@ -12,6 +12,7 @@ const candyDudePrice = document.getElementById("candyDudePrice");
 const minerCave = document.getElementById("minerCave");
 const minerStatus = document.getElementById("minerStatus");
 const minerTarget = document.getElementById("minerTarget");
+const minerSpriteMover = document.getElementById("minerSpriteMover");
 const minerSprite = document.getElementById("minerSprite");
 const minerImpactRing = document.getElementById("minerImpactRing");
 const normalShopTab = document.getElementById("normalShopTab");
@@ -30,6 +31,18 @@ let blueishCost = 45;
 let candyDudeOwned = false;
 let audioContext;
 let clickHue = 0;
+let minerWalkStarted = false;
+let minerWalkFrameIndex = 0;
+let minerWalkPosition = 18;
+let minerWalkDirection = 1;
+let minerWalkLastTime = 0;
+
+const minerWalkFrames = [
+  "/images/animations/candy-dude-walk-1.png",
+  "/images/animations/candy-dude-walk-2.png",
+  "/images/animations/candy-dude-walk-3.png",
+  "/images/animations/candy-dude-walk-2.png"
+];
 
 if (!antiCheat || !moneyAntiCheat) {
   document.documentElement.classList.add("anti-cheat-locked");
@@ -307,6 +320,60 @@ function animateSuperShopArrival(button, onComplete) {
   });
 }
 
+function updateMinerSpriteVisual() {
+  minerSpriteMover.style.transform = `translateX(${minerWalkPosition}px) scaleX(${minerWalkDirection})`;
+  minerSprite.src = minerWalkFrames[minerWalkFrameIndex];
+}
+
+function runMinerWalkFrame(now) {
+  if (!candyDudeOwned) {
+    minerWalkStarted = false;
+    minerSprite.src = "/images/animations/candy-dude-idle.png";
+    minerSpriteMover.style.transform = `translateX(${minerWalkPosition}px) scaleX(${minerWalkDirection})`;
+    return;
+  }
+
+  if (!minerWalkLastTime) {
+    minerWalkLastTime = now;
+  }
+
+  const dt = now - minerWalkLastTime;
+
+  if (dt >= 150) {
+    const trackWidth = Math.max(minerTarget.clientWidth - minerSpriteMover.offsetWidth - 10, 20);
+    const minX = 8;
+    const maxX = trackWidth;
+
+    minerWalkFrameIndex = (minerWalkFrameIndex + 1) % minerWalkFrames.length;
+    minerWalkPosition += minerWalkDirection * 6;
+
+    if (minerWalkPosition >= maxX) {
+      minerWalkPosition = maxX;
+      minerWalkDirection = -1;
+    } else if (minerWalkPosition <= minX) {
+      minerWalkPosition = minX;
+      minerWalkDirection = 1;
+    }
+
+    updateMinerSpriteVisual();
+    minerWalkLastTime = now;
+  }
+
+  window.requestAnimationFrame(runMinerWalkFrame);
+}
+
+function startMinerWalk() {
+  if (minerWalkStarted) {
+    return;
+  }
+
+  minerWalkStarted = true;
+  minerWalkLastTime = 0;
+  minerWalkFrameIndex = 0;
+  updateMinerSpriteVisual();
+  window.requestAnimationFrame(runMinerWalkFrame);
+}
+
 function buyUpgrade(button, cost, onBuy) {
   if (totalClicks < cost) {
     return false;
@@ -413,6 +480,7 @@ candyDudeUpgrade.addEventListener("click", () => {
 
   animateSuperShopArrival(candyDudeUpgrade, () => {
     minerStatus.textContent = "Candy Dude landed in the base.";
+    startMinerWalk();
     updateUi();
     runCandyDudeLoop();
   });
@@ -444,6 +512,7 @@ loadLocalPlayerdata();
 if (candyDudeOwned) {
   minerCave.classList.remove("hidden");
   minerStatus.textContent = "Candy Dude is back at work.";
+  startMinerWalk();
   runCandyDudeLoop();
 }
 

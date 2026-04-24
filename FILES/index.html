@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candy Bucket Clicker</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="game-layout">
+    <section class="play-area" aria-label="Clicker game">
+      <p class="counter-label">Clicks</p>
+      <p class="counter" id="counter">0</p>
+      <p class="stats-line" id="perClick">+1 per click</p>
+      <p class="stats-line" id="perSecond">+0 per second</p>
+
+      <div class="bucket-stage">
+        <button class="clicker-button" id="clickerButton" type="button" aria-label="Click the bucket">
+          <img id="bucketImage" src="../images/clicker/candy-bucket.png" alt="Halloween bucket clicker">
+        </button>
+      </div>
+
+      <section class="miner-cave hidden" id="minerCave" aria-label="Candy dude cave">
+        <div class="miner-cave-frame">
+          <img src="../images/shop/supershop/candy-dude.png" alt="Candy dude worker">
+        </div>
+        <p class="miner-cave-title">Candy Dude Cave</p>
+        <p class="miner-cave-status" id="minerStatus">Waiting for candy runs...</p>
+      </section>
+    </section>
+
+    <aside class="shop-panel" aria-label="Shop">
+      <div class="shop-topbar">
+        <button class="shop-tab is-active" id="normalShopTab" type="button">Shop</button>
+        <button class="shop-tab" id="superShopTab" type="button">Super Candies</button>
+      </div>
+
+      <section class="shop-section is-active" id="normalShopSection">
+        <button class="shop-item" id="mintUpgrade" type="button">
+          <img class="shop-item-image" src="../images/shop/mint.png" alt="Mint upgrade item">
+          <span class="shop-item-details">
+            <span class="shop-item-name">Mint</span>
+            <span class="shop-item-price" id="mintPrice">25 clicks</span>
+            <span class="shop-item-effect">+1 click per click</span>
+          </span>
+        </button>
+
+        <button class="shop-item" id="blueishUpgrade" type="button">
+          <img class="shop-item-image" src="../images/shop/blueish.png" alt="Blueish candy upgrade item">
+          <span class="shop-item-details">
+            <span class="shop-item-name">Blueish</span>
+            <span class="shop-item-price" id="blueishPrice">45 clicks</span>
+            <span class="shop-item-effect">+1 click per second</span>
+          </span>
+        </button>
+      </section>
+
+      <section class="shop-section" id="superShopSection">
+        <button class="shop-item shop-item-super" id="candyDudeUpgrade" type="button">
+          <img class="shop-item-image" src="../images/shop/supershop/candy-dude.png" alt="Candy dude super candy item">
+          <span class="shop-item-details">
+            <span class="shop-item-name">Candy Dude</span>
+            <span class="shop-item-price" id="candyDudePrice">1000 clicks</span>
+            <span class="shop-item-effect">Every 1-5 seconds he gives you 1-100 clicks</span>
+          </span>
+        </button>
+      </section>
+    </aside>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

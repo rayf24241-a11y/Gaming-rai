@@ -11,10 +11,21 @@ const blueishPrice = document.getElementById("blueishPrice");
 const candyDudePrice = document.getElementById("candyDudePrice");
 const minerCave = document.getElementById("minerCave");
 const minerStatus = document.getElementById("minerStatus");
+const minerTarget = document.getElementById("minerTarget");
+const minerSprite = document.getElementById("minerSprite");
+const minerImpactRing = document.getElementById("minerImpactRing");
 const normalShopTab = document.getElementById("normalShopTab");
 const superShopTab = document.getElementById("superShopTab");
 const normalShopSection = document.getElementById("normalShopSection");
 const superShopSection = document.getElementById("superShopSection");
+const antiCheat = window.CandyAntiCheat || {
+  install() {},
+  allowChange() {},
+  validateSnapshot() {},
+  isLocked() {
+    return false;
+  }
+};
 
 let totalClicks = 0;
 let clicksPerTap = 1;
@@ -25,6 +36,8 @@ let candyDudeOwned = false;
 let audioContext;
 let clickHue = 0;
 
+antiCheat.install();
+
 function formatNumber(value) {
   if (Number.isInteger(value)) {
     return String(value);
@@ -34,6 +47,15 @@ function formatNumber(value) {
 }
 
 function updateUi() {
+  antiCheat.validateSnapshot({
+    totalClicks,
+    clicksPerTap,
+    clicksPerSecond,
+    mintCost,
+    blueishCost,
+    candyDudeOwned
+  });
+
   counter.textContent = formatNumber(totalClicks);
   perClick.textContent = `+${formatNumber(clicksPerTap)} per click`;
   perSecond.textContent = `+${formatNumber(clicksPerSecond)} per second`;
@@ -129,6 +151,91 @@ function animateShopItemToBucket(button) {
   }, 700);
 }
 
+function triggerMinerImpact() {
+  minerTarget.classList.remove("is-hit");
+  minerImpactRing.classList.remove("is-active");
+
+  // Force restart of the CSS animations.
+  void minerTarget.offsetWidth;
+
+  minerTarget.classList.add("is-hit");
+  minerImpactRing.classList.add("is-active");
+
+  window.setTimeout(() => {
+    minerTarget.classList.remove("is-hit");
+    minerImpactRing.classList.remove("is-active");
+  }, 450);
+}
+
+function animateSuperShopArrival(button, onComplete) {
+  const sourceImage = button.querySelector(".shop-item-image");
+
+  if (!sourceImage) {
+    onComplete();
+    return;
+  }
+
+  const sourceRect = sourceImage.getBoundingClientRect();
+  const targetRect = minerSprite.getBoundingClientRect();
+  const flyer = sourceImage.cloneNode(true);
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const pathPoints = [
+    { left: vw * 0.18, top: vh * 0.24, scale: 1.2, rotate: -18 },
+    { left: vw * 0.68, top: vh * 0.16, scale: 1.05, rotate: 22 },
+    { left: vw * 0.38, top: vh * 0.72, scale: 1.12, rotate: -12 },
+    { left: vw * 0.6, top: vh * 0.44, scale: 0.92, rotate: 14 },
+    {
+      left: targetRect.left + targetRect.width * 0.18,
+      top: targetRect.top + targetRect.height * 0.04,
+      scale: 0.78,
+      rotate: 0
+    }
+  ];
+
+  flyer.className = "buy-flyer buy-flyer-super";
+  flyer.style.left = `${sourceRect.left}px`;
+  flyer.style.top = `${sourceRect.top}px`;
+  flyer.style.width = `${sourceRect.width}px`;
+  flyer.style.opacity = "1";
+  flyer.style.transform = "scale(1) rotate(0deg)";
+  document.body.appendChild(flyer);
+
+  sourceImage.classList.add("is-restocking");
+
+  let index = 0;
+
+  function moveNext() {
+    const point = pathPoints[index];
+
+    flyer.style.transition =
+      index === pathPoints.length - 1
+        ? "left 360ms cubic-bezier(0.15, 0.85, 0.2, 1), top 360ms cubic-bezier(0.15, 0.85, 0.2, 1), transform 360ms cubic-bezier(0.15, 0.85, 0.2, 1), opacity 360ms ease"
+        : "left 300ms ease-in-out, top 300ms ease-in-out, transform 300ms ease-in-out";
+    flyer.style.left = `${point.left}px`;
+    flyer.style.top = `${point.top}px`;
+    flyer.style.transform = `scale(${point.scale}) rotate(${point.rotate}deg)`;
+
+    if (index === pathPoints.length - 1) {
+      flyer.style.opacity = "0";
+      window.setTimeout(() => {
+        flyer.remove();
+        sourceImage.classList.remove("is-restocking");
+        triggerMinerImpact();
+        onComplete();
+      }, 380);
+      return;
+    }
+
+    index += 1;
+    window.setTimeout(moveNext, 320);
+  }
+
+  requestAnimationFrame(() => {
+    moveNext();
+  });
+}
+
 function buyUpgrade(button, cost, onBuy) {
   if (totalClicks < cost) {
     return false;
@@ -162,12 +269,31 @@ function runCandyDudeLoop() {
 }
 
 clickerButton.addEventListener("click", () => {
+  if (antiCheat.isLocked()) {
+    return;
+  }
+
+  antiCheat.allowChange({
+    maxGain: clicksPerTap,
+    maxTapGain: 0,
+    maxSecondGain: 0
+  });
   totalClicks += clicksPerTap;
   playClickSound();
   updateUi();
 });
 
 mintUpgrade.addEventListener("click", () => {
+  if (antiCheat.isLocked()) {
+    return;
+  }
+
+  antiCheat.allowChange({
+    maxSpend: mintCost,
+    maxTapGain: 1,
+    allowCostChange: true
+  });
+
   buyUpgrade(mintUpgrade, mintCost, () => {
     clicksPerTap += 1;
     mintCost = Math.round(mintCost * 1.75);
@@ -175,6 +301,16 @@ mintUpgrade.addEventListener("click", () => {
 });
 
 blueishUpgrade.addEventListener("click", () => {
+  if (antiCheat.isLocked()) {
+    return;
+  }
+
+  antiCheat.allowChange({
+    maxSpend: blueishCost,
+    maxSecondGain: 1,
+    allowCostChange: true
+  });
+
   buyUpgrade(blueishUpgrade, blueishCost, () => {
     clicksPerSecond += 1;
     blueishCost = Math.round(blueishCost * 1.75);
@@ -182,14 +318,28 @@ blueishUpgrade.addEventListener("click", () => {
 });
 
 candyDudeUpgrade.addEventListener("click", () => {
-  if (candyDudeOwned) {
+  if (antiCheat.isLocked() || candyDudeOwned) {
     return;
   }
 
-  buyUpgrade(candyDudeUpgrade, 1000, () => {
-    candyDudeOwned = true;
-    minerCave.classList.remove("hidden");
-    minerStatus.textContent = "Candy Dude is heading into the cave...";
+  if (totalClicks < 1000) {
+    return;
+  }
+
+  antiCheat.allowChange({
+    maxSpend: 1000,
+    allowCandyDudeUnlock: true
+  });
+
+  totalClicks -= 1000;
+  candyDudeOwned = true;
+  minerCave.classList.remove("hidden");
+  minerStatus.textContent = "Candy Dude is flying into his base...";
+  updateUi();
+
+  animateSuperShopArrival(candyDudeUpgrade, () => {
+    minerStatus.textContent = "Candy Dude landed in the base.";
+    updateUi();
     runCandyDudeLoop();
   });
 });
@@ -203,9 +353,13 @@ superShopTab.addEventListener("click", () => {
 });
 
 window.setInterval(() => {
-  if (clicksPerSecond <= 0) {
+  if (antiCheat.isLocked() || clicksPerSecond <= 0) {
     return;
   }
+
+  antiCheat.allowChange({
+    maxGain: clicksPerSecond
+  });
 
   totalClicks += clicksPerSecond;
   updateUi();

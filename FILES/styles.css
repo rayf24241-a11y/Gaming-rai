@@ -25,6 +25,45 @@ body {
   color: var(--text-main);
 }
 
+.anti-cheat-locked,
+.anti-cheat-locked body {
+  overflow: hidden;
+}
+
+.anti-cheat-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  background: rgba(2, 5, 14, 0.88);
+  backdrop-filter: blur(10px);
+}
+
+.anti-cheat-overlay.hidden {
+  display: none;
+}
+
+.anti-cheat-panel {
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 92, 92, 0.4);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(37, 7, 12, 0.95), rgba(16, 6, 19, 0.96));
+  text-align: center;
+  box-shadow: 0 0 2rem rgba(255, 67, 67, 0.18);
+}
+
+.anti-cheat-panel h2 {
+  margin: 0 0 0.75rem;
+  color: #ff9d9d;
+}
+
+.anti-cheat-panel p {
+  margin: 0.35rem 0;
+  color: #ffe2e2;
+}
+
 .game-layout {
   min-height: 100vh;
   display: grid;
@@ -67,14 +106,19 @@ body {
 
 .bucket-stage {
   position: relative;
-  min-height: 27rem;
-  display: flex;
-  align-items: center;
+  width: min(100%, 70rem);
+  min-height: 31rem;
+  display: grid;
+  grid-template-columns: minmax(14rem, 23rem) minmax(18rem, 1fr);
+  gap: clamp(1rem, 4vw, 4rem);
+  align-items: end;
 }
 
 .clicker-button {
   position: relative;
   z-index: 2;
+  justify-self: start;
+  align-self: end;
   border: 0;
   background: transparent;
   padding: 0;
@@ -102,15 +146,10 @@ body {
 }
 
 .miner-cave {
-  margin-top: 1rem;
-  width: min(24rem, 88vw);
-  padding: 1rem;
-  border: 1px solid rgba(145, 197, 255, 0.28);
-  border-radius: 1.1rem;
-  background:
-    radial-gradient(circle at 50% 15%, rgba(113, 153, 255, 0.2), transparent 28%),
-    linear-gradient(180deg, rgba(38, 34, 54, 0.92), rgba(17, 20, 34, 0.94));
-  box-shadow: inset 0 0 1.5rem rgba(0, 0, 0, 0.35);
+  justify-self: center;
+  align-self: center;
+  width: min(28rem, 100%);
+  padding: 0.75rem 0 0;
 }
 
 .miner-cave.hidden {
@@ -118,32 +157,103 @@ body {
 }
 
 .miner-cave-frame {
+  position: relative;
   display: grid;
   place-items: center;
-  min-height: 12rem;
-  border-radius: 0.9rem;
+  min-height: 18rem;
+  border-radius: 1.2rem;
+  border: 2px solid rgba(255, 208, 126, 0.22);
   background:
-    radial-gradient(circle at 50% 22%, rgba(255, 221, 115, 0.22), transparent 18%),
-    linear-gradient(180deg, #433728 0%, #26212f 45%, #17131e 100%);
+    linear-gradient(180deg, #c5d5ff 0%, #b7c7fb 34%, #917457 34%, #8f6c4f 42%, #755038 42%, #6b4735 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(29, 23, 20, 0.18),
+    0 1.4rem 2.5rem rgba(0, 0, 0, 0.18);
   overflow: hidden;
 }
 
+.miner-cave-sky {
+  position: absolute;
+  inset: 0 0 40% 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.25), transparent),
+    repeating-linear-gradient(90deg, rgba(57, 70, 120, 0.26) 0 2px, transparent 2px 18px),
+    repeating-linear-gradient(0deg, rgba(57, 70, 120, 0.26) 0 2px, transparent 2px 18px);
+}
+
+.miner-cave-wall {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 31%;
+  height: 12%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.55rem;
+  padding: 0 1rem;
+}
+
+.miner-cave-wall span {
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 229, 160, 0.95), rgba(255, 153, 76, 0.95));
+  box-shadow: 0 0 0 2px rgba(78, 46, 29, 0.35);
+}
+
+.miner-cave-floor {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 33%;
+  background:
+    repeating-linear-gradient(90deg, #7d5638 0 8px, #8f6242 8px 16px),
+    linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.14));
+  border-top: 4px solid rgba(89, 55, 34, 0.6);
+}
+
 .miner-cave-frame img {
-  width: 9rem;
+  position: absolute;
+  left: 50%;
+  bottom: 13%;
+  z-index: 2;
+  width: 8.5rem;
   height: auto;
-  filter: drop-shadow(0 0 1rem rgba(255, 210, 91, 0.18));
+  transform: translateX(-50%);
+  filter: drop-shadow(0 0.6rem 0 rgba(26, 19, 18, 0.16));
+}
+
+.miner-cave-frame.is-hit img {
+  animation: minerLand 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.miner-impact-ring {
+  position: absolute;
+  left: 50%;
+  bottom: 15%;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  border: 6px solid rgba(255, 234, 148, 0);
+  transform: translateX(-50%) scale(0.2);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.miner-impact-ring.is-active {
+  animation: impactBoom 420ms ease-out;
 }
 
 .miner-cave-title {
-  margin: 0.8rem 0 0.2rem;
+  margin: 0.75rem 0 0.2rem;
   font-size: 1.15rem;
-  color: #ffda84;
+  color: #ffe0a2;
+  text-align: center;
+  text-shadow: 0 0 1rem rgba(255, 214, 111, 0.2);
 }
 
 .miner-cave-status {
   margin: 0;
   font-size: 0.95rem;
   color: #d3d9ff;
+  text-align: center;
 }
 
 .shop-panel {
@@ -269,6 +379,39 @@ body {
     transform 620ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
+.buy-flyer-super {
+  z-index: 1200;
+  transition: none;
+}
+
+@keyframes minerLand {
+  0% {
+    transform: translateX(-50%) translateY(-0.2rem) scale(0.9);
+  }
+
+  45% {
+    transform: translateX(-50%) translateY(0.6rem) scale(1.12);
+  }
+
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes impactBoom {
+  0% {
+    opacity: 0.95;
+    transform: translateX(-50%) scale(0.25);
+    border-color: rgba(255, 238, 153, 0.95);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(2.2);
+    border-color: rgba(255, 238, 153, 0);
+  }
+}
+
 @media (max-width: 920px) {
   body {
     overflow: auto;
@@ -288,11 +431,21 @@ body {
 
   .bucket-stage {
     min-height: 21rem;
+    grid-template-columns: 1fr;
+    justify-items: center;
   }
 
   .shop-panel {
     border-left: 0;
     border-top: 1px solid var(--panel-border);
     background: rgba(4, 14, 24, 0.66);
+  }
+
+  .clicker-button {
+    justify-self: center;
+  }
+
+  .miner-cave {
+    width: min(26rem, 92vw);
   }
 }

@@ -18,15 +18,24 @@
         <button class="clicker-button" id="clickerButton" type="button" aria-label="Click the bucket">
           <img id="bucketImage" src="/images/clicker/candy-bucket.png" alt="Halloween bucket clicker">
         </button>
-      </div>
 
-      <section class="miner-cave hidden" id="minerCave" aria-label="Candy dude cave">
-        <div class="miner-cave-frame">
-          <img src="/images/shop/supershop/candy-dude.png" alt="Candy dude worker">
-        </div>
-        <p class="miner-cave-title">Candy Dude Cave</p>
-        <p class="miner-cave-status" id="minerStatus">Waiting for candy runs...</p>
-      </section>
+        <section class="miner-cave hidden" id="minerCave" aria-label="Candy dude cave">
+          <div class="miner-cave-frame" id="minerTarget">
+            <div class="miner-cave-sky"></div>
+            <div class="miner-cave-wall">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <div class="miner-cave-floor"></div>
+            <img id="minerSprite" src="/images/shop/supershop/candy-dude.png" alt="Candy dude worker">
+            <div class="miner-impact-ring" id="minerImpactRing"></div>
+          </div>
+          <p class="miner-cave-title">Candy Dude Base</p>
+          <p class="miner-cave-status" id="minerStatus">Waiting for candy runs...</p>
+        </section>
+      </div>
     </section>
 
     <aside class="shop-panel" aria-label="Shop">
@@ -68,6 +77,7 @@
     </aside>
   </main>
 
+  <script src="/FILES/anti-cheat/anti-cheat.js"></script>
   <script src="/FILES/script.js"></script>
 </body>
 </html>

@@ -374,6 +374,10 @@ body {
   transform: scale(0.7);
 }
 
+.shop-item.is-locked .shop-item-image {
+  filter: brightness(0.25) blur(1.5px);
+}
+
 .shop-item-details {
   display: flex;
   flex-direction: column;

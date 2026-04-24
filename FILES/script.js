@@ -6,10 +6,13 @@ const bucketImage = document.getElementById("bucketImage");
 const mintUpgrade = document.getElementById("mintUpgrade");
 const blueishUpgrade = document.getElementById("blueishUpgrade");
 const chocolateBarUpgrade = document.getElementById("chocolateBarUpgrade");
+const chocolateBarImage = document.getElementById("chocolateBarImage");
+const chocolateBarName = document.getElementById("chocolateBarName");
 const candyDudeUpgrade = document.getElementById("candyDudeUpgrade");
 const mintPrice = document.getElementById("mintPrice");
 const blueishPrice = document.getElementById("blueishPrice");
 const chocolateBarPrice = document.getElementById("chocolateBarPrice");
+const chocolateBarEffect = document.getElementById("chocolateBarEffect");
 const candyDudePrice = document.getElementById("candyDudePrice");
 const minerCave = document.getElementById("minerCave");
 const minerStatus = document.getElementById("minerStatus");
@@ -161,17 +164,23 @@ function updateUi() {
   antiCheat.validateSnapshot(snapshot);
   moneyAntiCheat.inspectMoney(snapshot);
 
+  const chocolateBarUnlocked = blueishCost > 45;
+
   counter.textContent = formatNumber(totalClicks);
   perClick.textContent = `+${formatNumber(clicksPerTap)} per click`;
   perSecond.textContent = `+${formatNumber(clicksPerSecond)} per second`;
   mintPrice.textContent = `${formatNumber(mintCost)} clicks`;
   blueishPrice.textContent = `${formatNumber(blueishCost)} clicks`;
-  chocolateBarPrice.textContent = `${formatNumber(chocolateBarCost)} clicks`;
+  chocolateBarName.textContent = chocolateBarUnlocked ? "Chocolate Bar" : "?";
+  chocolateBarPrice.textContent = chocolateBarUnlocked ? `${formatNumber(chocolateBarCost)} clicks` : "?";
+  chocolateBarEffect.textContent = chocolateBarUnlocked ? "+3 clicks per click" : "?";
+  chocolateBarImage.alt = chocolateBarUnlocked ? "Chocolate bar upgrade item" : "Unknown upgrade item";
   candyDudePrice.textContent = candyDudeOwned ? "Owned" : "1000 clicks";
 
   mintUpgrade.disabled = totalClicks < mintCost;
   blueishUpgrade.disabled = totalClicks < blueishCost;
-  chocolateBarUpgrade.disabled = totalClicks < chocolateBarCost;
+  chocolateBarUpgrade.disabled = !chocolateBarUnlocked || totalClicks < chocolateBarCost;
+  chocolateBarUpgrade.classList.toggle("is-locked", !chocolateBarUnlocked);
   candyDudeUpgrade.disabled = candyDudeOwned || totalClicks < 1000;
   candyDudeUpgrade.classList.toggle("is-sold", candyDudeOwned);
   saveLocalPlayerdata();

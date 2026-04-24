@@ -8,14 +8,22 @@
   const state = {
     joinedAt: Date.now(),
     lastPassiveTickAt: Date.now(),
-    lastPassiveTotal: 0
+    lastPassiveTotal: 0,
+    hasBaseline: false
   };
 
   function inspectMoney(snapshot) {
     const now = Date.now();
     const elapsedMs = now - state.joinedAt;
 
-    if (elapsedMs < 30000 && snapshot.totalClicks >= 1000000) {
+    if (!state.hasBaseline) {
+      state.lastPassiveTickAt = now;
+      state.lastPassiveTotal = snapshot.totalClicks;
+      state.hasBaseline = true;
+      return;
+    }
+
+    if (elapsedMs < 30000 && state.lastPassiveTotal < 1000000 && snapshot.totalClicks >= 1000000) {
       antiCheat.trigger("money-scan:first-30s-million");
       return;
     }

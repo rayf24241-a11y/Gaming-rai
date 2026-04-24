@@ -20,6 +20,7 @@ const normalShopSection = document.getElementById("normalShopSection");
 const superShopSection = document.getElementById("superShopSection");
 const antiCheat = window.CandyAntiCheat;
 const moneyAntiCheat = window.CandyMoneyAntiCheat;
+const LOCAL_PLAYERDATA_KEY = "candyClickerLocalPlayerdata";
 
 let totalClicks = 0;
 let clicksPerTap = 1;
@@ -45,6 +46,15 @@ if (!antiCheat || !moneyAntiCheat) {
 }
 
 antiCheat.install();
+antiCheat.setResetHandler(() => {
+  window.localStorage.removeItem(LOCAL_PLAYERDATA_KEY);
+  totalClicks = 0;
+  clicksPerTap = 1;
+  clicksPerSecond = 0;
+  mintCost = 25;
+  blueishCost = 45;
+  candyDudeOwned = false;
+});
 
 function formatNumber(value) {
   if (Number.isInteger(value)) {
@@ -52,6 +62,55 @@ function formatNumber(value) {
   }
 
   return value.toFixed(2).replace(/\.?0+$/, "");
+}
+
+function loadLocalPlayerdata() {
+  const raw = window.localStorage.getItem(LOCAL_PLAYERDATA_KEY);
+
+  if (!raw) {
+    return;
+  }
+
+  try {
+    const saved = JSON.parse(raw);
+
+    if (typeof saved.totalClicks === "number" && Number.isFinite(saved.totalClicks) && saved.totalClicks >= 0) {
+      totalClicks = saved.totalClicks;
+    }
+
+    if (typeof saved.clicksPerTap === "number" && Number.isFinite(saved.clicksPerTap) && saved.clicksPerTap >= 1) {
+      clicksPerTap = saved.clicksPerTap;
+    }
+
+    if (typeof saved.clicksPerSecond === "number" && Number.isFinite(saved.clicksPerSecond) && saved.clicksPerSecond >= 0) {
+      clicksPerSecond = saved.clicksPerSecond;
+    }
+
+    if (typeof saved.mintCost === "number" && Number.isFinite(saved.mintCost) && saved.mintCost >= 1) {
+      mintCost = saved.mintCost;
+    }
+
+    if (typeof saved.blueishCost === "number" && Number.isFinite(saved.blueishCost) && saved.blueishCost >= 1) {
+      blueishCost = saved.blueishCost;
+    }
+
+    candyDudeOwned = Boolean(saved.candyDudeOwned);
+  } catch {
+    window.localStorage.removeItem(LOCAL_PLAYERDATA_KEY);
+  }
+}
+
+function saveLocalPlayerdata() {
+  const playerdata = {
+    totalClicks,
+    clicksPerTap,
+    clicksPerSecond,
+    mintCost,
+    blueishCost,
+    candyDudeOwned
+  };
+
+  window.localStorage.setItem(LOCAL_PLAYERDATA_KEY, JSON.stringify(playerdata));
 }
 
 function updateUi() {
@@ -78,6 +137,7 @@ function updateUi() {
   blueishUpgrade.disabled = totalClicks < blueishCost;
   candyDudeUpgrade.disabled = candyDudeOwned || totalClicks < 1000;
   candyDudeUpgrade.classList.toggle("is-sold", candyDudeOwned);
+  saveLocalPlayerdata();
 }
 
 function switchShop(showSuperShop) {
@@ -272,6 +332,9 @@ function runCandyDudeLoop() {
     }
 
     const reward = Math.floor(Math.random() * 100) + 1;
+    antiCheat.allowChange({
+      maxGain: reward
+    });
     totalClicks += reward;
     minerStatus.textContent = `Candy Dude found ${reward} clicks for you.`;
     updateUi();
@@ -375,6 +438,14 @@ window.setInterval(() => {
   totalClicks += clicksPerSecond;
   updateUi();
 }, 1000);
+
+loadLocalPlayerdata();
+
+if (candyDudeOwned) {
+  minerCave.classList.remove("hidden");
+  minerStatus.textContent = "Candy Dude is back at work.";
+  runCandyDudeLoop();
+}
 
 switchShop(false);
 updateUi();

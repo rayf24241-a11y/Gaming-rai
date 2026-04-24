@@ -5,8 +5,11 @@
     currentAllowance: null,
     overlay: null,
     tripped: false,
-    tamperChecksStarted: false
+    tamperChecksStarted: false,
+    onReset: null
   };
+  const STRIKE_STORAGE_KEY = "candyAntiCheatStrikes";
+  const MAX_STRIKES = 4;
 
   function ensureOverlay() {
     if (state.overlay) {
@@ -33,10 +36,56 @@
     }
 
     state.tripped = true;
+    const strikes = incrementStrikes();
     console.clear();
-    console.warn("Anti-cheat triggered:", reason);
+    console.warn("Anti-cheat triggered:", reason, `(${strikes}/${MAX_STRIKES})`);
     ensureOverlay().classList.remove("hidden");
     document.documentElement.classList.add("anti-cheat-locked");
+
+    const heading = state.overlay.querySelector("h2");
+    const lines = state.overlay.querySelectorAll("p");
+
+    if (heading) {
+      heading.textContent = strikes >= MAX_STRIKES ? "Progress Reset" : "Anti-Cheat Triggered";
+    }
+
+    if (lines[0]) {
+      lines[0].textContent =
+        strikes >= MAX_STRIKES
+          ? "Too many anti-cheat triggers were detected."
+          : `Developer tools or invalid game edits were detected. Strike ${strikes}/${MAX_STRIKES}.`;
+    }
+
+    if (lines[1]) {
+      lines[1].textContent =
+        strikes >= MAX_STRIKES
+          ? "Local browser progress has been reset."
+          : "Reload the page to continue.";
+    }
+
+    if (strikes >= MAX_STRIKES) {
+      clearStrikes();
+
+      if (typeof state.onReset === "function") {
+        state.onReset(reason);
+      }
+    }
+  }
+
+  function getStrikes() {
+    const raw = window.localStorage.getItem(STRIKE_STORAGE_KEY);
+    const parsed = Number.parseInt(raw || "0", 10);
+    return Number.isFinite(parsed) ? Math.max(parsed, 0) : 0;
+  }
+
+  function incrementStrikes() {
+    const next = getStrikes() + 1;
+    window.localStorage.setItem(STRIKE_STORAGE_KEY, String(next));
+    return next;
+  }
+
+  function clearStrikes() {
+    window.localStorage.removeItem(STRIKE_STORAGE_KEY);
   }
 
   function installEventLocks() {
@@ -239,6 +288,10 @@
     install,
     allowChange,
     validateSnapshot,
+    setResetHandler(handler) {
+      state.onReset = handler;
+    },
+    clearStrikes,
     isLocked() {
       return state.tripped;
     },

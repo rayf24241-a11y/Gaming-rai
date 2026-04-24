@@ -27,7 +27,7 @@ const superShopSection = document.getElementById("superShopSection");
 const antiCheat = window.CandyAntiCheat;
 const moneyAntiCheat = window.CandyMoneyAntiCheat;
 const LOCAL_PLAYERDATA_KEY = "candyClickerLocalPlayerdata";
-const PLAYERDATA_SCHEMA_VERSION = 2;
+const PLAYERDATA_SCHEMA_VERSION = 3;
 
 let totalClicks = 0;
 let clicksPerTap = 1;
@@ -36,6 +36,7 @@ let mintCost = 25;
 let blueishCost = 45;
 let chocolateBarCost = 100;
 let candyDudeOwned = false;
+let blueishOwnedCount = 0;
 let audioContext;
 let clickHue = 0;
 let minerWalkStarted = false;
@@ -75,6 +76,7 @@ antiCheat.setResetHandler(() => {
   blueishCost = 45;
   chocolateBarCost = 100;
   candyDudeOwned = false;
+  blueishOwnedCount = 0;
 });
 
 function formatNumber(value) {
@@ -128,6 +130,12 @@ function loadLocalPlayerdata() {
     }
 
     candyDudeOwned = Boolean(playerdata.candyDudeOwned);
+    if (typeof playerdata.blueishOwnedCount === "number" && Number.isFinite(playerdata.blueishOwnedCount) && playerdata.blueishOwnedCount >= 0) {
+      blueishOwnedCount = Math.floor(playerdata.blueishOwnedCount);
+    } else if (clicksPerSecond > 0 || blueishCost > 45) {
+      // Migrate old saves that existed before Blueish ownership was tracked directly.
+      blueishOwnedCount = 1;
+    }
   } catch {
     window.localStorage.removeItem(LOCAL_PLAYERDATA_KEY);
   }
@@ -143,7 +151,8 @@ function saveLocalPlayerdata() {
       mintCost,
       blueishCost,
       chocolateBarCost,
-      candyDudeOwned
+      candyDudeOwned,
+      blueishOwnedCount
     }
   };
 
@@ -158,13 +167,14 @@ function updateUi() {
     mintCost,
     blueishCost,
     chocolateBarCost,
-    candyDudeOwned
+    candyDudeOwned,
+    blueishOwnedCount
   };
 
   antiCheat.validateSnapshot(snapshot);
   moneyAntiCheat.inspectMoney(snapshot);
 
-  const chocolateBarUnlocked = blueishCost > 45;
+  const chocolateBarUnlocked = blueishOwnedCount > 0;
 
   counter.textContent = formatNumber(totalClicks);
   perClick.textContent = `+${formatNumber(clicksPerTap)} per click`;
@@ -174,6 +184,7 @@ function updateUi() {
   chocolateBarName.textContent = chocolateBarUnlocked ? "Chocolate Bar" : "?";
   chocolateBarPrice.textContent = chocolateBarUnlocked ? `${formatNumber(chocolateBarCost)} clicks` : "?";
   chocolateBarEffect.textContent = chocolateBarUnlocked ? "+3 clicks per click" : "?";
+  chocolateBarImage.src = chocolateBarUnlocked ? "/images/shop/chocolate-bar.png" : "/images/shop/mint.png";
   chocolateBarImage.alt = chocolateBarUnlocked ? "Chocolate bar upgrade item" : "Unknown upgrade item";
   candyDudePrice.textContent = candyDudeOwned ? "Owned" : "1000 clicks";
 
@@ -487,6 +498,7 @@ blueishUpgrade.addEventListener("click", () => {
 
   buyUpgrade(blueishUpgrade, blueishCost, () => {
     clicksPerSecond += 1;
+    blueishOwnedCount += 1;
     blueishCost = Math.round(blueishCost * 1.75);
   });
 });
@@ -556,6 +568,13 @@ window.setInterval(() => {
   totalClicks += clicksPerSecond;
   updateUi();
 }, 1000);
+
+window.addEventListener("beforeunload", saveLocalPlayerdata);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") {
+    saveLocalPlayerdata();
+  }
+});
 
 loadLocalPlayerdata();
 

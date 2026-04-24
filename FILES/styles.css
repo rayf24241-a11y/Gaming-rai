@@ -332,6 +332,7 @@ body {
 }
 
 .shop-item {
+  position: relative;
   width: 100%;
   display: grid;
   grid-template-columns: 4.9rem 1fr;
@@ -376,6 +377,19 @@ body {
 
 .shop-item.is-locked .shop-item-image {
   filter: brightness(0.25) blur(1.5px);
+}
+
+.shop-item.is-locked::after {
+  content: "?";
+  position: absolute;
+  left: 1.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff7d4;
+  text-shadow: 0 0 1rem rgba(255, 255, 255, 0.35);
+  pointer-events: none;
 }
 
 .shop-item-details {

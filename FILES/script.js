@@ -18,14 +18,8 @@ const normalShopTab = document.getElementById("normalShopTab");
 const superShopTab = document.getElementById("superShopTab");
 const normalShopSection = document.getElementById("normalShopSection");
 const superShopSection = document.getElementById("superShopSection");
-const antiCheat = window.CandyAntiCheat || {
-  install() {},
-  allowChange() {},
-  validateSnapshot() {},
-  isLocked() {
-    return false;
-  }
-};
+const antiCheat = window.CandyAntiCheat;
+const moneyAntiCheat = window.CandyMoneyAntiCheat;
 
 let totalClicks = 0;
 let clicksPerTap = 1;
@@ -35,6 +29,20 @@ let blueishCost = 45;
 let candyDudeOwned = false;
 let audioContext;
 let clickHue = 0;
+
+if (!antiCheat || !moneyAntiCheat) {
+  document.documentElement.classList.add("anti-cheat-locked");
+  document.body.innerHTML = [
+    '<div class="anti-cheat-overlay">',
+    '<div class="anti-cheat-panel">',
+    "<h2>Game Files Missing</h2>",
+    "<p>Required anti-cheat files did not load.</p>",
+    "<p>Restore the game files and reload.</p>",
+    "</div>",
+    "</div>"
+  ].join("");
+  throw new Error("Required anti-cheat modules missing");
+}
 
 antiCheat.install();
 
@@ -47,14 +55,17 @@ function formatNumber(value) {
 }
 
 function updateUi() {
-  antiCheat.validateSnapshot({
+  const snapshot = {
     totalClicks,
     clicksPerTap,
     clicksPerSecond,
     mintCost,
     blueishCost,
     candyDudeOwned
-  });
+  };
+
+  antiCheat.validateSnapshot(snapshot);
+  moneyAntiCheat.inspectMoney(snapshot);
 
   counter.textContent = formatNumber(totalClicks);
   perClick.textContent = `+${formatNumber(clicksPerTap)} per click`;

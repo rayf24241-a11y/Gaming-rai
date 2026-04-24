@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="candy-shield" content="ac-files-v1">
   <title>Candy Bucket Clicker</title>
   <link rel="stylesheet" href="/FILES/styles.css">
 </head>
 <body>
+  <div id="acSentinel" class="anti-cheat-sentinel" aria-hidden="true" data-shield="files"></div>
   <main class="game-layout">
     <section class="play-area" aria-label="Clicker game">
       <p class="counter-label">Clicks</p>
@@ -77,7 +79,16 @@
     </aside>
   </main>
 
-  <script src="/FILES/anti-cheat/anti-cheat.js"></script>
+  <script>
+    window.__candyShield = Object.freeze({
+      files: true,
+      sentinelId: "acSentinel",
+      expectedModules: ["CandyAntiCheat", "CandyMoneyAntiCheat"],
+      buildTag: "2026-04-24-files-guard"
+    });
+  </script>
+  <script src="/anti-cheat/anti-cheat.js"></script>
+  <script src="/anti-cheat/anti.cheat.money.js"></script>
   <script src="/FILES/script.js"></script>
 </body>
 </html>

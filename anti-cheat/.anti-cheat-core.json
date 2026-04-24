@@ -1,0 +1,8 @@
+{
+  "folder": "anti-cheat",
+  "guard": "core",
+  "modules": [
+    "anti-cheat.js",
+    "anti.cheat.money.js"
+  ]
+}

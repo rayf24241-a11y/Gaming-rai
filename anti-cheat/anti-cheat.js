@@ -4,7 +4,8 @@
     lastSnapshot: null,
     currentAllowance: null,
     overlay: null,
-    tripped: false
+    tripped: false,
+    tamperChecksStarted: false
   };
 
   function ensureOverlay() {
@@ -90,6 +91,29 @@
         trigger("debugger-delay");
       }
     }, 1200);
+  }
+
+  function installRuntimeTamperChecks() {
+    if (state.tamperChecksStarted) {
+      return;
+    }
+
+    state.tamperChecksStarted = true;
+
+    window.setInterval(() => {
+      if (state.tripped) {
+        return;
+      }
+
+      if (!window.CandyAntiCheat || typeof window.CandyAntiCheat.validateSnapshot !== "function") {
+        trigger("anti-cheat-missing");
+        return;
+      }
+
+      if (!window.CandyMoneyAntiCheat || typeof window.CandyMoneyAntiCheat.inspectMoney !== "function") {
+        trigger("money-anti-cheat-missing");
+      }
+    }, 1000);
   }
 
   function sanitizeNumber(value) {
@@ -191,6 +215,7 @@
     state.installed = true;
     installEventLocks();
     installDevtoolsDetection();
+    installRuntimeTamperChecks();
 
     window.addEventListener("resize", () => {
       if (state.tripped) {
